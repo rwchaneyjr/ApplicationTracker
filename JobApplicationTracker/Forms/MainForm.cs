@@ -55,8 +55,13 @@ public class MainForm : Form
 
         BuildLayout();
         WireEvents();
-        StartBrowserBridge();
         RefreshAll(showStartupReminders: true);
+    }
+
+    protected override void OnShown(EventArgs e)
+    {
+        base.OnShown(e);
+        StartBrowserBridge();
     }
 
     protected override void OnFormClosed(FormClosedEventArgs e)
@@ -378,12 +383,27 @@ public class MainForm : Form
             return;
         }
 
-        BeginInvoke(() =>
+        void update()
         {
             _bridgeStatusLabel.ForeColor = Color.FromArgb(30, 90, 55);
             _bridgeStatusLabel.Text =
-                $"{message}  |  Keep this app open while applying on LinkedIn. Extension sends jobs here automatically.";
-        });
+                $"{message}  |  Keep this app open while applying online. Extension sends jobs here automatically.";
+        }
+
+        if (!IsHandleCreated)
+        {
+            HandleCreated += (_, _) => BeginInvoke(update);
+            return;
+        }
+
+        if (InvokeRequired)
+        {
+            BeginInvoke(update);
+        }
+        else
+        {
+            update();
+        }
     }
 
     private void BridgeServer_ApplicationReceived(JobApplication application)
@@ -393,7 +413,7 @@ public class MainForm : Form
             return;
         }
 
-        BeginInvoke(() =>
+        void update()
         {
             RefreshAll();
             _bridgeStatusLabel.ForeColor = Color.FromArgb(26, 86, 138);
@@ -403,7 +423,22 @@ public class MainForm : Form
             NotifyIconBalloon(
                 "Application saved",
                 $"{application.CompanyName} — {application.JobTitle}");
-        });
+        }
+
+        if (!IsHandleCreated)
+        {
+            HandleCreated += (_, _) => BeginInvoke(update);
+            return;
+        }
+
+        if (InvokeRequired)
+        {
+            BeginInvoke(update);
+        }
+        else
+        {
+            update();
+        }
     }
 
     private void NotifyIconBalloon(string title, string text)
