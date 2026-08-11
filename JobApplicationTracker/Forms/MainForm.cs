@@ -309,7 +309,7 @@ public class MainForm : Form
             Padding = new Padding(0, 8, 0, 0)
         };
 
-        StylePrimaryButton(_finishButton, "Finish Application");
+        StylePrimaryButton(_finishButton, "Application URL");
         StyleSecondaryButton(_addButton, "Add Application");
         StyleSecondaryButton(_editButton, "Edit");
         StyleSecondaryButton(_deleteButton, "Delete");
@@ -318,7 +318,7 @@ public class MainForm : Form
         StyleSecondaryButton(_exportButton, "Export CSV");
         StyleSecondaryButton(_backupButton, "Backup Database");
 
-        _finishButton.Width = 180;
+        _finishButton.Width = 160;
         _addButton.Width = 150;
         _openLinkButton.Width = 150;
         _exportButton.Width = 130;
@@ -372,7 +372,7 @@ public class MainForm : Form
         {
             _bridgeStatusLabel.ForeColor = Color.FromArgb(140, 45, 45);
             _bridgeStatusLabel.Text =
-                $"Browser link failed to start ({ex.Message}). Keep the app open and retry, or use Finish Application manually.";
+                $"Browser link failed to start ({ex.Message}). Keep the app open and retry, or use Application URL manually.";
         }
     }
 
