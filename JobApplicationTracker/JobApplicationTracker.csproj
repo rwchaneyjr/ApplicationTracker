@@ -5,6 +5,7 @@
     <TargetFramework>net8.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
+    <UseWPF>true</UseWPF>
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
     <AssemblyName>JobApplicationTracker</AssemblyName>
@@ -13,7 +14,7 @@
     <Product>Job Application Tracker</Product>
     <Company>Job Application Tracker</Company>
     <Description>Track job applications locally with reminders, search, and CSV export.</Description>
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationHighDpiMode>SystemAware</ApplicationHighDpiMode>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>

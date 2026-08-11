@@ -13,6 +13,7 @@ public class ApplicationEditForm : Form
     private readonly bool _finishMode;
 
     private readonly TextBox _pasteTextBox = new();
+    private readonly Button _getUrlButton = new();
     private readonly Button _fillBlanksButton = new();
     private readonly Label _fillStatusLabel = new();
 
@@ -63,7 +64,7 @@ public class ApplicationEditForm : Form
         MinimizeBox = false;
         ShowInTaskbar = false;
         Font = new Font("Segoe UI", 11F);
-        ClientSize = new Size(700, 760);
+        ClientSize = new Size(720, 800);
         BackColor = Color.White;
         Padding = new Padding(16);
 
@@ -80,7 +81,7 @@ public class ApplicationEditForm : Form
             RowCount = 3,
             Padding = new Padding(4)
         };
-        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 150));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 175));
         root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         root.RowStyles.Add(new RowStyle(SizeType.Absolute, 54));
 
@@ -105,7 +106,7 @@ public class ApplicationEditForm : Form
 
         var title = new Label
         {
-            Text = "Paste a job posting — then press Fill Blanks",
+            Text = "Get URL from browser, or paste a job posting",
             Dock = DockStyle.Top,
             Height = 24,
             Font = new Font("Segoe UI Semibold", 11F, FontStyle.Bold),
@@ -114,9 +115,9 @@ public class ApplicationEditForm : Form
 
         var hint = new Label
         {
-            Text = "Fills empty company, title, salary, URL, contact, and email fields only. Does not overwrite what you already typed.",
+            Text = "Open the job page in Chrome/Edge, then click Get URL — copies the link, screenshots the page, and fills blank fields.",
             Dock = DockStyle.Top,
-            Height = 20,
+            Height = 34,
             Font = new Font("Segoe UI", 9F),
             ForeColor = Color.FromArgb(70, 80, 95)
         };
@@ -125,7 +126,7 @@ public class ApplicationEditForm : Form
         _pasteTextBox.ScrollBars = ScrollBars.Vertical;
         _pasteTextBox.Dock = DockStyle.Fill;
         _pasteTextBox.Font = new Font("Segoe UI", 10F);
-        _pasteTextBox.PlaceholderText = "Paste the job posting text or URL description here…";
+        _pasteTextBox.PlaceholderText = "Paste the job posting text here, or use Get URL…";
 
         var actionRow = new FlowLayoutPanel
         {
@@ -136,8 +137,12 @@ public class ApplicationEditForm : Form
             Padding = new Padding(0, 6, 0, 0)
         };
 
-        StylePrimaryButton(_fillBlanksButton, "Fill Blanks");
-        _fillBlanksButton.Width = 140;
+        StylePrimaryButton(_getUrlButton, "Get URL");
+        _getUrlButton.Width = 120;
+        _getUrlButton.Click += GetUrlButton_Click;
+
+        StyleSecondaryButton(_fillBlanksButton, "Fill Blanks");
+        _fillBlanksButton.Width = 130;
         _fillBlanksButton.Click += FillBlanksButton_Click;
 
         _fillStatusLabel.AutoSize = true;
@@ -145,6 +150,7 @@ public class ApplicationEditForm : Form
         _fillStatusLabel.ForeColor = Color.FromArgb(40, 90, 55);
         _fillStatusLabel.Font = new Font("Segoe UI", 10F);
 
+        actionRow.Controls.Add(_getUrlButton);
         actionRow.Controls.Add(_fillBlanksButton);
         actionRow.Controls.Add(_fillStatusLabel);
 
@@ -242,6 +248,91 @@ public class ApplicationEditForm : Form
         buttonPanel.Controls.Add(_saveButton);
         buttonPanel.Controls.Add(_cancelButton);
         return buttonPanel;
+    }
+
+    private void GetUrlButton_Click(object? sender, EventArgs e)
+    {
+        _getUrlButton.Enabled = false;
+        _fillStatusLabel.ForeColor = Color.FromArgb(70, 80, 95);
+        _fillStatusLabel.Text = "Capturing browser page…";
+        Application.DoEvents();
+
+        try
+        {
+            var result = BrowserCaptureHelper.CaptureFromBrowser();
+            if (!result.Success || result.Parsed is null)
+            {
+                _fillStatusLabel.ForeColor = Color.FromArgb(140, 80, 20);
+                _fillStatusLabel.Text = result.Message;
+                MessageBox.Show(
+                    result.Message,
+                    "Get URL",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+                return;
+            }
+
+            // Put captured text into the paste box so the user can see / edit it.
+            var pasteBuilder = new System.Text.StringBuilder();
+            if (!string.IsNullOrWhiteSpace(result.Parsed.JobTitle))
+            {
+                pasteBuilder.AppendLine(result.Parsed.JobTitle);
+            }
+
+            if (!string.IsNullOrWhiteSpace(result.Parsed.CompanyName))
+            {
+                pasteBuilder.AppendLine("Company: " + result.Parsed.CompanyName);
+            }
+
+            if (!string.IsNullOrWhiteSpace(result.Url))
+            {
+                pasteBuilder.AppendLine(result.Url);
+            }
+
+            if (!string.IsNullOrWhiteSpace(result.WindowTitle))
+            {
+                pasteBuilder.AppendLine(result.WindowTitle);
+            }
+
+            _pasteTextBox.Text = pasteBuilder.ToString().Trim();
+
+            var draft = CaptureCurrentValues();
+            var filledCount = JobPostingParser.FillBlanks(draft, result.Parsed);
+
+            _companyTextBox.Text = draft.CompanyName;
+            _jobTitleTextBox.Text = draft.JobTitle;
+            _salaryTextBox.Text = draft.SalaryOrPayRate;
+            _urlTextBox.Text = draft.JobPostingUrl;
+            _contactNameTextBox.Text = draft.ContactName;
+            _contactEmailTextBox.Text = draft.ContactEmail;
+            _notesTextBox.Text = draft.Notes;
+
+            _fillStatusLabel.ForeColor = Color.FromArgb(40, 90, 55);
+            _fillStatusLabel.Text = $"{result.Message} Filled {filledCount} blank field(s).";
+        }
+        catch (Exception ex)
+        {
+            _fillStatusLabel.ForeColor = Color.FromArgb(140, 45, 45);
+            _fillStatusLabel.Text = "Capture failed.";
+            MessageBox.Show(
+                $"Unable to capture from the browser.\n\n{ex.Message}",
+                "Get URL",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Error);
+        }
+        finally
+        {
+            _getUrlButton.Enabled = true;
+            try
+            {
+                // Return focus to this dialog after touching the browser window.
+                Activate();
+            }
+            catch
+            {
+                // Ignore.
+            }
+        }
     }
 
     private void FillBlanksButton_Click(object? sender, EventArgs e)
