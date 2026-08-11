@@ -28,10 +28,11 @@ public class MainForm : Form
 
     private readonly DataGridView _grid = new();
 
+    private readonly Button _finishButton = new();
     private readonly Button _addButton = new();
     private readonly Button _editButton = new();
     private readonly Button _deleteButton = new();
-    private readonly Button _saveButton = new();
+    private readonly Button _refreshButton = new();
     private readonly Button _openLinkButton = new();
     private readonly Button _exportButton = new();
     private readonly Button _backupButton = new();
@@ -68,7 +69,7 @@ public class MainForm : Form
         root.RowStyles.Add(new RowStyle(SizeType.Absolute, 150)); // reminders
         root.RowStyles.Add(new RowStyle(SizeType.Absolute, 64));  // filters
         root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));  // grid
-        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 64));  // buttons
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 74));  // buttons
 
         root.Controls.Add(BuildDashboard(), 0, 0);
         root.Controls.Add(BuildReminderSection(), 0, 1);
@@ -276,26 +277,28 @@ public class MainForm : Form
         {
             Dock = DockStyle.Fill,
             FlowDirection = FlowDirection.LeftToRight,
-            WrapContents = false,
-            Padding = new Padding(0, 10, 0, 0)
+            WrapContents = true,
+            Padding = new Padding(0, 8, 0, 0)
         };
 
-        StylePrimaryButton(_addButton, "Add Application");
+        StylePrimaryButton(_finishButton, "Finish Application");
+        StyleSecondaryButton(_addButton, "Add Application");
         StyleSecondaryButton(_editButton, "Edit");
         StyleSecondaryButton(_deleteButton, "Delete");
-        StyleSecondaryButton(_saveButton, "Save");
+        StyleSecondaryButton(_refreshButton, "Refresh");
         StyleSecondaryButton(_openLinkButton, "Open Job Link");
         StyleSecondaryButton(_exportButton, "Export CSV");
         StyleSecondaryButton(_backupButton, "Backup Database");
 
-        _addButton.Width = 160;
+        _finishButton.Width = 180;
+        _addButton.Width = 150;
         _openLinkButton.Width = 150;
         _exportButton.Width = 130;
         _backupButton.Width = 160;
 
         panel.Controls.AddRange(new Control[]
         {
-            _addButton, _editButton, _deleteButton, _saveButton,
+            _finishButton, _addButton, _editButton, _deleteButton, _refreshButton,
             _openLinkButton, _exportButton, _backupButton
         });
 
@@ -304,18 +307,11 @@ public class MainForm : Form
 
     private void WireEvents()
     {
+        _finishButton.Click += (_, _) => FinishApplication();
         _addButton.Click += (_, _) => AddApplication();
         _editButton.Click += (_, _) => EditSelected();
         _deleteButton.Click += (_, _) => DeleteSelected();
-        _saveButton.Click += (_, _) =>
-        {
-            RefreshAll();
-            MessageBox.Show(
-                "All changes are stored in the local SQLite database.",
-                "Saved",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information);
-        };
+        _refreshButton.Click += (_, _) => RefreshAll();
         _openLinkButton.Click += (_, _) => OpenSelectedJobLink();
         _exportButton.Click += (_, _) => ExportCsv();
         _backupButton.Click += (_, _) => BackupDatabase();
@@ -339,7 +335,7 @@ public class MainForm : Form
     {
         if (e.Control && e.KeyCode == Keys.N)
         {
-            AddApplication();
+            FinishApplication();
             e.Handled = true;
         }
         else if (e.KeyCode == Keys.F5)
@@ -519,9 +515,40 @@ public class MainForm : Form
             MessageBoxIcon.Information);
     }
 
+    private void FinishApplication()
+    {
+        using var dialog = new ApplicationEditForm(existing: null, finishMode: true);
+        if (dialog.ShowDialog(this) != DialogResult.OK)
+        {
+            return;
+        }
+
+        try
+        {
+            DatabaseHelper.Insert(dialog.ApplicationData);
+            RefreshAll();
+
+            var app = dialog.ApplicationData;
+            MessageBox.Show(
+                $"Saved to your tracker:\n\n{app.CompanyName} — {app.JobTitle}\nStatus: {app.Status}\n\n" +
+                "The dashboard, reminders, and application list have been updated.",
+                "Application Saved",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"Unable to save the application.\n\n{ex.Message}",
+                "Save Error",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Error);
+        }
+    }
+
     private void AddApplication()
     {
-        using var dialog = new ApplicationEditForm();
+        using var dialog = new ApplicationEditForm(existing: null, finishMode: false);
         if (dialog.ShowDialog(this) != DialogResult.OK)
         {
             return;

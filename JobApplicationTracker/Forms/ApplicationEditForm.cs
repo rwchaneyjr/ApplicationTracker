@@ -1,15 +1,21 @@
-using System.Diagnostics;
-using System.Globalization;
 using JobApplicationTracker.Data;
 using JobApplicationTracker.Models;
 
 namespace JobApplicationTracker.Forms;
 
 /// <summary>
-/// Dialog used to add or edit a single job application.
+/// Dialog used to finish, add, or edit a job application.
+/// Includes a paste box that fills blank fields from a job posting.
 /// </summary>
 public class ApplicationEditForm : Form
 {
+    private readonly bool _isNew;
+    private readonly bool _finishMode;
+
+    private readonly TextBox _pasteTextBox = new();
+    private readonly Button _fillBlanksButton = new();
+    private readonly Label _fillStatusLabel = new();
+
     private readonly TextBox _companyTextBox = new();
     private readonly TextBox _jobTitleTextBox = new();
     private readonly DateTimePicker _dateAppliedPicker = new();
@@ -29,26 +35,37 @@ public class ApplicationEditForm : Form
 
     public JobApplication ApplicationData { get; private set; }
 
-    public ApplicationEditForm(JobApplication? existing = null)
+    /// <param name="existing">Existing application when editing; null when adding.</param>
+    /// <param name="finishMode">
+    /// When true (new application), defaults to Applied + today's date and uses
+    /// "Finish Application" wording for the save button.
+    /// </param>
+    public ApplicationEditForm(JobApplication? existing = null, bool finishMode = false)
     {
+        _isNew = existing is null;
+        _finishMode = finishMode && _isNew;
+
         ApplicationData = existing is null
             ? new JobApplication
             {
                 DateApplied = DateTime.Today,
-                Status = ApplicationStatus.Interested
+                Status = _finishMode ? ApplicationStatus.Applied : ApplicationStatus.Interested
             }
             : Clone(existing);
 
-        Text = existing is null ? "Add Application" : "Edit Application";
+        Text = _finishMode
+            ? "Finish Application"
+            : _isNew ? "Add Application" : "Edit Application";
+
         StartPosition = FormStartPosition.CenterParent;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;
         ShowInTaskbar = false;
         Font = new Font("Segoe UI", 11F);
-        ClientSize = new Size(640, 620);
+        ClientSize = new Size(700, 760);
         BackColor = Color.White;
-        Padding = new Padding(20);
+        Padding = new Padding(16);
 
         BuildLayout();
         LoadValues();
@@ -56,19 +73,103 @@ public class ApplicationEditForm : Form
 
     private void BuildLayout()
     {
+        var root = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 1,
+            RowCount = 3,
+            Padding = new Padding(4)
+        };
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 150));
+        root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 54));
+
+        root.Controls.Add(BuildPastePanel(), 0, 0);
+        root.Controls.Add(BuildFieldsPanel(), 0, 1);
+        root.Controls.Add(BuildButtonPanel(), 0, 2);
+
+        Controls.Add(root);
+        AcceptButton = _saveButton;
+        CancelButton = _cancelButton;
+    }
+
+    private Control BuildPastePanel()
+    {
+        var panel = new Panel
+        {
+            Dock = DockStyle.Fill,
+            BackColor = Color.FromArgb(240, 246, 252),
+            Padding = new Padding(12),
+            Margin = new Padding(0, 0, 0, 8)
+        };
+
+        var title = new Label
+        {
+            Text = "Paste a job posting — then press Fill Blanks",
+            Dock = DockStyle.Top,
+            Height = 24,
+            Font = new Font("Segoe UI Semibold", 11F, FontStyle.Bold),
+            ForeColor = Color.FromArgb(26, 86, 138)
+        };
+
+        var hint = new Label
+        {
+            Text = "Fills empty company, title, salary, URL, contact, and email fields only. Does not overwrite what you already typed.",
+            Dock = DockStyle.Top,
+            Height = 20,
+            Font = new Font("Segoe UI", 9F),
+            ForeColor = Color.FromArgb(70, 80, 95)
+        };
+
+        _pasteTextBox.Multiline = true;
+        _pasteTextBox.ScrollBars = ScrollBars.Vertical;
+        _pasteTextBox.Dock = DockStyle.Fill;
+        _pasteTextBox.Font = new Font("Segoe UI", 10F);
+        _pasteTextBox.PlaceholderText = "Paste the job posting text or URL description here…";
+
+        var actionRow = new FlowLayoutPanel
+        {
+            Dock = DockStyle.Bottom,
+            Height = 42,
+            FlowDirection = FlowDirection.LeftToRight,
+            WrapContents = false,
+            Padding = new Padding(0, 6, 0, 0)
+        };
+
+        StylePrimaryButton(_fillBlanksButton, "Fill Blanks");
+        _fillBlanksButton.Width = 140;
+        _fillBlanksButton.Click += FillBlanksButton_Click;
+
+        _fillStatusLabel.AutoSize = true;
+        _fillStatusLabel.Margin = new Padding(12, 10, 0, 0);
+        _fillStatusLabel.ForeColor = Color.FromArgb(40, 90, 55);
+        _fillStatusLabel.Font = new Font("Segoe UI", 10F);
+
+        actionRow.Controls.Add(_fillBlanksButton);
+        actionRow.Controls.Add(_fillStatusLabel);
+
+        panel.Controls.Add(_pasteTextBox);
+        panel.Controls.Add(actionRow);
+        panel.Controls.Add(hint);
+        panel.Controls.Add(title);
+        return panel;
+    }
+
+    private Control BuildFieldsPanel()
+    {
         var layout = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
             ColumnCount = 2,
-            RowCount = 13,
-            Padding = new Padding(4)
+            RowCount = 12,
+            Padding = new Padding(0, 4, 0, 0)
         };
         layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 170));
         layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
 
-        for (var i = 0; i < 12; i++)
+        for (var i = 0; i < 11; i++)
         {
-            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 42));
+            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 40));
         }
 
         layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
@@ -113,19 +214,24 @@ public class ApplicationEditForm : Form
         _notesTextBox.AcceptsReturn = true;
         AddLabeledControl(layout, 10, "Notes", _notesTextBox);
         layout.SetRowSpan(_notesTextBox, 2);
-        layout.RowStyles[10] = new RowStyle(SizeType.Percent, 100);
-        layout.RowStyles[11] = new RowStyle(SizeType.Absolute, 8);
 
+        return layout;
+    }
+
+    private Control BuildButtonPanel()
+    {
         var buttonPanel = new FlowLayoutPanel
         {
-            Dock = DockStyle.Bottom,
+            Dock = DockStyle.Fill,
             FlowDirection = FlowDirection.RightToLeft,
-            Height = 54,
             Padding = new Padding(0, 8, 0, 0)
         };
 
-        StylePrimaryButton(_saveButton, "Save");
+        var saveText = _finishMode ? "Save to Tracker" : "Save";
+        StylePrimaryButton(_saveButton, saveText);
+        _saveButton.Width = _finishMode ? 160 : 120;
         StyleSecondaryButton(_cancelButton, "Cancel");
+
         _saveButton.Click += SaveButton_Click;
         _cancelButton.Click += (_, _) =>
         {
@@ -135,12 +241,64 @@ public class ApplicationEditForm : Form
 
         buttonPanel.Controls.Add(_saveButton);
         buttonPanel.Controls.Add(_cancelButton);
+        return buttonPanel;
+    }
 
-        Controls.Add(layout);
-        Controls.Add(buttonPanel);
+    private void FillBlanksButton_Click(object? sender, EventArgs e)
+    {
+        var pasted = _pasteTextBox.Text;
+        if (string.IsNullOrWhiteSpace(pasted))
+        {
+            MessageBox.Show(
+                "Paste a job posting into the box first, then press Fill Blanks.",
+                "Nothing to Fill",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
+            return;
+        }
 
-        AcceptButton = _saveButton;
-        CancelButton = _cancelButton;
+        var draft = CaptureCurrentValues();
+        var parsed = JobPostingParser.Parse(pasted);
+        var filledCount = JobPostingParser.FillBlanks(draft, parsed);
+
+        // Push filled values back into the form controls.
+        _companyTextBox.Text = draft.CompanyName;
+        _jobTitleTextBox.Text = draft.JobTitle;
+        _salaryTextBox.Text = draft.SalaryOrPayRate;
+        _urlTextBox.Text = draft.JobPostingUrl;
+        _contactNameTextBox.Text = draft.ContactName;
+        _contactEmailTextBox.Text = draft.ContactEmail;
+        _notesTextBox.Text = draft.Notes;
+
+        if (filledCount == 0)
+        {
+            _fillStatusLabel.ForeColor = Color.FromArgb(140, 80, 20);
+            _fillStatusLabel.Text = "No blank fields could be filled from that text.";
+        }
+        else
+        {
+            _fillStatusLabel.ForeColor = Color.FromArgb(40, 90, 55);
+            _fillStatusLabel.Text = $"Filled {filledCount} blank field{(filledCount == 1 ? string.Empty : "s")}.";
+        }
+    }
+
+    private JobApplication CaptureCurrentValues()
+    {
+        return new JobApplication
+        {
+            Id = ApplicationData.Id,
+            CompanyName = _companyTextBox.Text.Trim(),
+            JobTitle = _jobTitleTextBox.Text.Trim(),
+            DateApplied = _dateAppliedClearCheckBox.Checked ? null : _dateAppliedPicker.Value.Date,
+            Status = _statusComboBox.SelectedItem?.ToString() ?? ApplicationStatus.Interested,
+            SalaryOrPayRate = _salaryTextBox.Text.Trim(),
+            JobPostingUrl = _urlTextBox.Text.Trim(),
+            ContactName = _contactNameTextBox.Text.Trim(),
+            ContactEmail = _contactEmailTextBox.Text.Trim(),
+            InterviewDate = _interviewEnabledCheckBox.Checked ? _interviewPicker.Value.Date : null,
+            FollowUpDate = _followUpEnabledCheckBox.Checked ? _followUpPicker.Value.Date : null,
+            Notes = _notesTextBox.Text.Trim()
+        };
     }
 
     private static void AddLabeledControl(TableLayoutPanel layout, int row, string labelText, Control control)
@@ -306,6 +464,7 @@ public class ApplicationEditForm : Form
         button.FlatStyle = FlatStyle.Flat;
         button.FlatAppearance.BorderSize = 0;
         button.Margin = new Padding(8, 0, 0, 0);
+        button.Cursor = Cursors.Hand;
     }
 
     private static void StyleSecondaryButton(Button button, string text)
@@ -319,5 +478,6 @@ public class ApplicationEditForm : Form
         button.FlatStyle = FlatStyle.Flat;
         button.FlatAppearance.BorderSize = 0;
         button.Margin = new Padding(8, 0, 0, 0);
+        button.Cursor = Cursors.Hand;
     }
 }
