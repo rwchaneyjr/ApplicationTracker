@@ -106,7 +106,7 @@ public class ApplicationEditForm : Form
 
         var title = new Label
         {
-            Text = "Get URL from browser, or paste a job posting",
+            Text = "Get Apply URL from browser, or paste a job posting",
             Dock = DockStyle.Top,
             Height = 24,
             Font = new Font("Segoe UI Semibold", 11F, FontStyle.Bold),
@@ -115,7 +115,7 @@ public class ApplicationEditForm : Form
 
         var hint = new Label
         {
-            Text = "Open the job page in Chrome/Edge, then click Get URL — copies the link, screenshots the page, and fills blank fields.",
+            Text = "Open the job page in Chrome/Edge, then click Get Apply URL — copies the link, screenshots the page, and fills blank fields.",
             Dock = DockStyle.Top,
             Height = 34,
             Font = new Font("Segoe UI", 9F),
@@ -126,7 +126,7 @@ public class ApplicationEditForm : Form
         _pasteTextBox.ScrollBars = ScrollBars.Vertical;
         _pasteTextBox.Dock = DockStyle.Fill;
         _pasteTextBox.Font = new Font("Segoe UI", 10F);
-        _pasteTextBox.PlaceholderText = "Paste the job posting text here, or use Get URL…";
+        _pasteTextBox.PlaceholderText = "Paste the job posting text here, or use Get Apply URL…";
 
         var actionRow = new FlowLayoutPanel
         {
@@ -137,8 +137,8 @@ public class ApplicationEditForm : Form
             Padding = new Padding(0, 6, 0, 0)
         };
 
-        StylePrimaryButton(_getUrlButton, "Get URL");
-        _getUrlButton.Width = 120;
+        StylePrimaryButton(_getUrlButton, "Get Apply URL");
+        _getUrlButton.Width = 150;
         _getUrlButton.Click += GetUrlButton_Click;
 
         StyleSecondaryButton(_fillBlanksButton, "Fill Blanks");
@@ -266,7 +266,7 @@ public class ApplicationEditForm : Form
                 _fillStatusLabel.Text = result.Message;
                 MessageBox.Show(
                     result.Message,
-                    "Get URL",
+                    "Get Apply URL",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information);
                 return;
@@ -316,7 +316,7 @@ public class ApplicationEditForm : Form
             _fillStatusLabel.Text = "Capture failed.";
             MessageBox.Show(
                 $"Unable to capture from the browser.\n\n{ex.Message}",
-                "Get URL",
+                "Get Apply URL",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Error);
         }

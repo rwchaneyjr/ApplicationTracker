@@ -37,7 +37,7 @@ public static class BrowserCaptureHelper
         if (window is null || window.Value.Handle == IntPtr.Zero)
         {
             return BrowserCaptureResult.Fail(
-                "No browser job page found. Open a job on LinkedIn/Indeed/ZipRecruiter, click that browser window, then press Get URL again.");
+                "No browser job page found. Open a job on LinkedIn/Indeed/ZipRecruiter, click that browser window, then press Get Apply URL again.");
         }
 
         var handle = window.Value.Handle;
