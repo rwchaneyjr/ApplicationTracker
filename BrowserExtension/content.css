@@ -1,0 +1,56 @@
+#job-tracker-save-button {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 2147483646;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+#job-tracker-save-button button {
+  border: none;
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+#job-tracker-save-button button[disabled] {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.job-tracker-main-btn {
+  background: #1a568a;
+  color: #fff;
+}
+
+.job-tracker-secondary-btn {
+  background: #ffffff;
+  color: #1a568a;
+  border: 1px solid #c5d0db !important;
+}
+
+.job-tracker-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%);
+  z-index: 2147483647;
+  background: #16324f;
+  color: #fff;
+  padding: 12px 18px;
+  border-radius: 10px;
+  font: 600 14px "Segoe UI", Arial, sans-serif;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  max-width: min(520px, 90vw);
+  text-align: center;
+}
+
+.job-tracker-toast.error {
+  background: #8b2e2e;
+}

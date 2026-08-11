@@ -37,7 +37,9 @@ public class MainForm : Form
     private readonly Button _exportButton = new();
     private readonly Button _backupButton = new();
     private readonly Button _clearFiltersButton = new();
+    private readonly Label _bridgeStatusLabel = new();
 
+    private readonly LocalBridgeServer _bridgeServer = new();
     private List<JobApplication> _currentRows = new();
     private bool _suppressFilterEvents;
 
@@ -53,7 +55,16 @@ public class MainForm : Form
 
         BuildLayout();
         WireEvents();
+        StartBrowserBridge();
         RefreshAll(showStartupReminders: true);
+    }
+
+    protected override void OnFormClosed(FormClosedEventArgs e)
+    {
+        _bridgeServer.ApplicationReceived -= BridgeServer_ApplicationReceived;
+        _bridgeServer.StatusChanged -= BridgeServer_StatusChanged;
+        _bridgeServer.Dispose();
+        base.OnFormClosed(e);
     }
 
     private void BuildLayout()
@@ -62,7 +73,7 @@ public class MainForm : Form
         {
             Dock = DockStyle.Fill,
             ColumnCount = 1,
-            RowCount = 5,
+            RowCount = 6,
             Padding = new Padding(16)
         };
         root.RowStyles.Add(new RowStyle(SizeType.Absolute, 110)); // dashboard
@@ -70,14 +81,26 @@ public class MainForm : Form
         root.RowStyles.Add(new RowStyle(SizeType.Absolute, 64));  // filters
         root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));  // grid
         root.RowStyles.Add(new RowStyle(SizeType.Absolute, 74));  // buttons
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 28));  // bridge status
 
         root.Controls.Add(BuildDashboard(), 0, 0);
         root.Controls.Add(BuildReminderSection(), 0, 1);
         root.Controls.Add(BuildFilterSection(), 0, 2);
         root.Controls.Add(BuildGridSection(), 0, 3);
         root.Controls.Add(BuildButtonBar(), 0, 4);
+        root.Controls.Add(BuildBridgeStatusBar(), 0, 5);
 
         Controls.Add(root);
+    }
+
+    private Control BuildBridgeStatusBar()
+    {
+        _bridgeStatusLabel.Dock = DockStyle.Fill;
+        _bridgeStatusLabel.TextAlign = ContentAlignment.MiddleLeft;
+        _bridgeStatusLabel.Font = new Font("Segoe UI", 9.5F);
+        _bridgeStatusLabel.ForeColor = Color.FromArgb(70, 80, 95);
+        _bridgeStatusLabel.Text = "Browser link: starting…";
+        return _bridgeStatusLabel;
     }
 
     private Control BuildDashboard()
@@ -329,6 +352,79 @@ public class MainForm : Form
         };
 
         KeyDown += MainForm_KeyDown;
+    }
+
+    private void StartBrowserBridge()
+    {
+        _bridgeServer.ApplicationReceived += BridgeServer_ApplicationReceived;
+        _bridgeServer.StatusChanged += BridgeServer_StatusChanged;
+
+        try
+        {
+            _bridgeServer.Start();
+        }
+        catch (Exception ex)
+        {
+            _bridgeStatusLabel.ForeColor = Color.FromArgb(140, 45, 45);
+            _bridgeStatusLabel.Text =
+                $"Browser link failed to start ({ex.Message}). Keep the app open and retry, or use Finish Application manually.";
+        }
+    }
+
+    private void BridgeServer_StatusChanged(string message)
+    {
+        if (IsDisposed)
+        {
+            return;
+        }
+
+        BeginInvoke(() =>
+        {
+            _bridgeStatusLabel.ForeColor = Color.FromArgb(30, 90, 55);
+            _bridgeStatusLabel.Text =
+                $"{message}  |  Keep this app open while applying on LinkedIn. Extension sends jobs here automatically.";
+        });
+    }
+
+    private void BridgeServer_ApplicationReceived(JobApplication application)
+    {
+        if (IsDisposed)
+        {
+            return;
+        }
+
+        BeginInvoke(() =>
+        {
+            RefreshAll();
+            _bridgeStatusLabel.ForeColor = Color.FromArgb(26, 86, 138);
+            _bridgeStatusLabel.Text =
+                $"Saved from browser: {application.CompanyName} — {application.JobTitle}";
+
+            NotifyIconBalloon(
+                "Application saved",
+                $"{application.CompanyName} — {application.JobTitle}");
+        });
+    }
+
+    private void NotifyIconBalloon(string title, string text)
+    {
+        // Lightweight notice without requiring a tray icon lifetime.
+        try
+        {
+            using var notify = new NotifyIcon
+            {
+                Visible = true,
+                Icon = SystemIcons.Information,
+                BalloonTipTitle = title,
+                BalloonTipText = text,
+                BalloonTipIcon = ToolTipIcon.Info
+            };
+            notify.ShowBalloonTip(3000);
+        }
+        catch
+        {
+            // Optional UI only.
+        }
     }
 
     private void MainForm_KeyDown(object? sender, KeyEventArgs e)

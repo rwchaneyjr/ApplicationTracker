@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Job Application Tracker</title>
+  <style>
+    body {
+      margin: 0;
+      width: 320px;
+      font: 14px/1.4 "Segoe UI", Arial, sans-serif;
+      color: #1f2933;
+      background: #f5f7fa;
+    }
+    header {
+      background: #1a568a;
+      color: #fff;
+      padding: 12px 14px;
+      font-weight: 700;
+    }
+    main { padding: 12px 14px 16px; }
+    .status {
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: #e8eef5;
+      margin-bottom: 12px;
+    }
+    .status.ok { background: #e5f6ec; color: #1f6b3a; }
+    .status.bad { background: #fdecec; color: #8b2e2e; }
+    button {
+      width: 100%;
+      border: 0;
+      border-radius: 8px;
+      padding: 11px 12px;
+      margin-top: 8px;
+      font-weight: 650;
+      cursor: pointer;
+    }
+    .primary { background: #1a568a; color: #fff; }
+    .secondary { background: #fff; border: 1px solid #c9d3de !important; }
+    p.hint { color: #52606d; font-size: 12px; margin: 10px 0 0; }
+  </style>
+</head>
+<body>
+  <header>Job Application Tracker</header>
+  <main>
+    <div id="status" class="status">Checking desktop app…</div>
+    <button class="primary" id="saveApplied">Save current job as Applied</button>
+    <button class="secondary" id="saveInterested">Save as Interested</button>
+    <p class="hint">
+      Keep the desktop app open. On LinkedIn job pages you will also see a floating
+      <strong>Save to Tracker</strong> button. After Easy Apply submit, the extension
+      tries to save automatically.
+    </p>
+  </main>
+  <script src="popup.js"></script>
+</body>
+</html>

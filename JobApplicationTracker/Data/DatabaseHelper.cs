@@ -282,6 +282,48 @@ public static class DatabaseHelper
         return results;
     }
 
+    public static JobApplication? FindDuplicate(JobApplication application)
+    {
+        using var connection = new SqliteConnection(ConnectionString);
+        connection.Open();
+
+        using var command = connection.CreateCommand();
+
+        if (!string.IsNullOrWhiteSpace(application.JobPostingUrl))
+        {
+            command.CommandText = """
+                SELECT Id, CompanyName, JobTitle, DateApplied, Status, SalaryOrPayRate,
+                       JobPostingUrl, ContactName, ContactEmail, InterviewDate, FollowUpDate, Notes
+                FROM Applications
+                WHERE JobPostingUrl IS NOT NULL
+                  AND lower(trim(JobPostingUrl)) = lower(trim($url))
+                LIMIT 1;
+                """;
+            command.Parameters.AddWithValue("$url", application.JobPostingUrl.Trim());
+        }
+        else
+        {
+            command.CommandText = """
+                SELECT Id, CompanyName, JobTitle, DateApplied, Status, SalaryOrPayRate,
+                       JobPostingUrl, ContactName, ContactEmail, InterviewDate, FollowUpDate, Notes
+                FROM Applications
+                WHERE lower(trim(CompanyName)) = lower(trim($company))
+                  AND lower(trim(JobTitle)) = lower(trim($title))
+                LIMIT 1;
+                """;
+            command.Parameters.AddWithValue("$company", application.CompanyName.Trim());
+            command.Parameters.AddWithValue("$title", application.JobTitle.Trim());
+        }
+
+        using var reader = command.ExecuteReader();
+        if (reader.Read())
+        {
+            return ReadApplication(reader);
+        }
+
+        return null;
+    }
+
     public static void ExportToCsv(string filePath, IEnumerable<JobApplication> applications)
     {
         var builder = new StringBuilder();

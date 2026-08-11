@@ -6,6 +6,7 @@ A simple Windows desktop application for tracking every job you apply for — co
 
 ## Features
 
+- **LinkedIn companion extension:** when you apply on LinkedIn, save (or auto-capture) the company/title/URL into the desktop app over a local-only bridge — LinkedIn’s form stays on LinkedIn
 - **Finish Application:** after you apply, press this button, paste the job posting, click **Fill Blanks** to auto-fill empty fields, then **Save to Tracker** — it stores the record and refreshes the dashboard, reminders, and table
 - Track applications with company, title, date applied, status, salary, posting URL, recruiter contact, interview date, follow-up date, and notes
 - Status options: Interested, Applied, Under Review, Assessment, Interview, Offer, Hired, Rejected, Withdrawn
@@ -84,6 +85,18 @@ You can also use [Inno Setup](https://jrsoftware.org/isinfo.php) later to wrap i
 |------|----------|
 | SQLite database | `%LocalAppData%\JobApplicationTracker\applications.db` |
 | Default backups | `%LocalAppData%\JobApplicationTracker\Backups\` (or a folder you choose) |
+
+## Capture jobs from LinkedIn (form stays on LinkedIn)
+
+The desktop app cannot see LinkedIn by itself (browser security). Use the included companion extension:
+
+1. Keep **Job Application Tracker** open (status bar shows “Browser link ready”).
+2. In Chrome/Edge → Extensions → Developer mode → **Load unpacked** → choose the `BrowserExtension` folder.
+3. Apply on LinkedIn as usual.
+4. Click **Save to Tracker** on the job page (or use Easy Apply — the extension tries to auto-save after submit).
+5. The job appears in the desktop app immediately.
+
+Details: see `BrowserExtension/README.md`.
 
 ## How to use
 
