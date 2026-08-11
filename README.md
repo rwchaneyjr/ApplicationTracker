@@ -101,7 +101,7 @@ Details: see `BrowserExtension/README.md`.
 ## How to use
 
 1. Click **Finish Application** when you have just applied (status defaults to Applied, date = today).
-2. Optional: paste the job posting text and press **Fill Blanks** to auto-fill empty company, title, salary, URL, and contact fields.
+2. Optional: open the job page in your browser and click **Get URL** to copy the link, screenshot the page, and auto-fill blank company/title/URL fields. Or paste the job posting text and press **Fill Blanks**.
 3. Review the fields, set a **Follow-up date** if you want a reminder, then press **Save to Tracker**.
 4. The dashboard, reminders, and application table update immediately.
 5. Use search and status/date filters to narrow the list.
