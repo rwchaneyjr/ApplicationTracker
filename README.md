@@ -69,9 +69,14 @@ The runnable file will be:
 JobApplicationTracker\publish\JobApplicationTracker.exe
 ```
 
-### Optional: package as an installer
+### Optional: package as an installer / pinnable app
 
-Use a tool such as [Inno Setup](https://jrsoftware.org/isinfo.php) or the Visual Studio Installer Projects extension to wrap `JobApplicationTracker.exe` into a simple Setup.exe / MSI suitable for a small paid utility.
+1. Publish the `.exe` (command above).
+2. Double-click **`MakePinnable.bat`** in the repo root.
+3. That installs the app under `%LocalAppData%\JobApplicationTracker\App` and creates **Start Menu** + **Desktop** shortcuts.
+4. Right-click **Job Application Tracker** → **Pin to Start** / **Pin to taskbar**.
+
+You can also use [Inno Setup](https://jrsoftware.org/isinfo.php) later to wrap it into a Setup.exe / MSI for sale.
 
 ## Where data is stored
 
