@@ -86,14 +86,14 @@ You can also use [Inno Setup](https://jrsoftware.org/isinfo.php) later to wrap i
 | SQLite database | `%LocalAppData%\JobApplicationTracker\applications.db` |
 | Default backups | `%LocalAppData%\JobApplicationTracker\Backups\` (or a folder you choose) |
 
-## Capture jobs from LinkedIn (form stays on LinkedIn)
+## Capture jobs from LinkedIn, Indeed, ZipRecruiter, and more
 
-The desktop app cannot see LinkedIn by itself (browser security). Use the included companion extension:
+The desktop app cannot see browser tabs by itself. Use the companion extension:
 
 1. Keep **Job Application Tracker** open (status bar shows “Browser link ready”).
 2. In Chrome/Edge → Extensions → Developer mode → **Load unpacked** → choose the `BrowserExtension` folder.
-3. Apply on LinkedIn as usual.
-4. Click **Save to Tracker** on the job page (or use Easy Apply — the extension tries to auto-save after submit).
+3. Apply on **LinkedIn, Indeed, ZipRecruiter, Glassdoor**, etc.
+4. Click **Save to Tracker** on the job page (or use the extension popup).
 5. The job appears in the desktop app immediately.
 
 Details: see `BrowserExtension/README.md`.

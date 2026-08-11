@@ -6,22 +6,65 @@ function setStatus(text, ok) {
 }
 
 function extractFromTab(markApplied) {
-  const jobTitle =
-    document.querySelector(".job-details-jobs-unified-top-card__job-title h1, .jobs-unified-top-card__job-title h1, h1")?.textContent?.replace(/\s+/g, " ").trim() ||
-    document.title.replace(/\s*\|\s*LinkedIn.*$/i, "").trim();
+  function textOf(el) {
+    return (el?.textContent || "").replace(/\s+/g, " ").trim();
+  }
 
-  const companyName =
-    document.querySelector(".job-details-jobs-unified-top-card__company-name a, .job-details-jobs-unified-top-card__company-name, .jobs-unified-top-card__company-name a, .jobs-unified-top-card__company-name")?.textContent?.replace(/\s+/g, " ").trim() ||
-    "Unknown company";
+  function firstText(selectors) {
+    for (const selector of selectors) {
+      const el = document.querySelector(selector);
+      const value = textOf(el);
+      if (value) return value;
+    }
+    return "";
+  }
+
+  const host = location.hostname.toLowerCase();
+  let source = host.replace(/^www\./, "");
+  if (host.includes("linkedin")) source = "LinkedIn";
+  else if (host.includes("indeed")) source = "Indeed";
+  else if (host.includes("ziprecruiter")) source = "ZipRecruiter";
+  else if (host.includes("glassdoor")) source = "Glassdoor";
+  else if (host.includes("monster")) source = "Monster";
+  else if (host.includes("dice.com")) source = "Dice";
+  else if (host.includes("greenhouse")) source = "Greenhouse";
+  else if (host.includes("lever.co")) source = "Lever";
+  else if (host.includes("workday")) source = "Workday";
+
+  const jobTitle = firstText([
+    ".job-details-jobs-unified-top-card__job-title h1",
+    "h1[data-testid='jobsearch-JobInfoHeader-title']",
+    ".jobsearch-JobInfoHeader-title",
+    "h1.job_title",
+    "[data-test='job-title']",
+    "h1",
+    "[itemprop='title']"
+  ]) || document.title.replace(/\s*[\|\-–—]\s*(LinkedIn|Indeed|ZipRecruiter|Glassdoor).*$/i, "").trim();
+
+  let companyName = firstText([
+    ".job-details-jobs-unified-top-card__company-name a",
+    ".job-details-jobs-unified-top-card__company-name",
+    "[data-company-name='true']",
+    "[data-testid='inlineHeader-companyName']",
+    "a.company_name",
+    "[data-test='employer-name']",
+    "[itemprop='hiringOrganization']",
+    "[class*='company-name']",
+    "[class*='companyName']"
+  ]);
+
+  if (!companyName && / at /i.test(jobTitle)) {
+    companyName = jobTitle.split(/\sat\s/i).pop().trim();
+  }
 
   return {
-    companyName,
-    jobTitle,
+    companyName: companyName || "Unknown company",
+    jobTitle: jobTitle || "Unknown job title",
     jobPostingUrl: location.href.split("?")[0],
-    source: location.hostname.includes("linkedin") ? "LinkedIn" : location.hostname,
+    source,
     markApplied,
     status: markApplied ? "Applied" : "Interested",
-    notes: `Captured from browser tab on ${new Date().toISOString()}`
+    notes: `Captured from ${source} on ${new Date().toISOString()}`
   };
 }
 
@@ -31,7 +74,7 @@ async function refreshHealth() {
       setStatus("Desktop app not running. Open Job Application Tracker first.", false);
       return;
     }
-    setStatus("Desktop app connected. Ready to save jobs.", true);
+    setStatus("Desktop app connected. Works with LinkedIn, Indeed, ZipRecruiter, and more.", true);
   });
 }
 

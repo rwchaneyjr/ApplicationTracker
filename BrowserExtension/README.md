@@ -1,37 +1,28 @@
-# Browser Extension — LinkedIn → Job Application Tracker
+# Browser Extension — Job sites → Job Application Tracker
 
-This companion extension lets the **desktop app know when you apply on LinkedIn** (or manually save a job from a LinkedIn job page).
+Send jobs from **LinkedIn, Indeed, ZipRecruiter, Glassdoor**, and other sites into the desktop app.
 
-LinkedIn’s application form stays on LinkedIn. The extension reads the job title/company/URL from the page and sends them to the desktop app over a **local-only** link:
+The job site’s apply form stays on that website. The extension reads company / title / URL from the page and sends them to:
 
-`http://127.0.0.1:17871`
+`http://127.0.0.1:17871` (local only)
 
-Nothing is sent to the cloud.
+## Supported sites
 
-## Setup (one time)
+| Site | Floating **Save to Tracker** button | Extension popup Save |
+|------|-------------------------------------|----------------------|
+| LinkedIn | Yes | Yes |
+| Indeed | Yes | Yes |
+| ZipRecruiter | Yes | Yes |
+| Glassdoor | Yes | Yes |
+| Monster / Dice | Yes | Yes |
+| Greenhouse / Lever / Workday | Yes | Yes |
+| Other job pages | Use popup on the open tab | Yes |
 
-### 1. Keep the desktop app running
-Open **Job Application Tracker**.  
-At the bottom you should see: **Browser link ready…**
+Auto-save after “application submitted” works best on LinkedIn Easy Apply; on other sites use **Save to Tracker** if auto-detect misses.
 
-### 2. Install the extension in Chrome or Edge
+## Setup
 
-1. Open `chrome://extensions` (Chrome) or `edge://extensions` (Edge)
-2. Turn on **Developer mode**
-3. Click **Load unpacked**
-4. Select this folder:
-
-`BrowserExtension`
-
-### 3. Apply on LinkedIn
-1. Open a LinkedIn job posting
-2. Either:
-   - Click the floating **Save to Tracker** button, or
-   - Finish **Easy Apply** (the extension tries to auto-save after submit), or
-   - Click the extension icon → **Save current job as Applied**
-3. Look in the desktop app — the job should appear in the table and dashboard
-
-## Notes
-- The desktop app must be open for LinkedIn saves to work
-- Duplicate job links are not saved twice
-- LinkedIn page layouts change; if auto-detect misses, use **Save to Tracker**
+1. Open **Job Application Tracker** (status bar: Browser link ready)
+2. Chrome/Edge → Extensions → Developer mode → **Load unpacked** → select `BrowserExtension`
+3. Apply on any supported site → click **Save to Tracker**
+4. Confirm the job appears in the desktop app
